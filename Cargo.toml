@@ -1,6 +1,17 @@
 [package]
 name = "k617rgb"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
+eframe = { version = "0.36", optional = true, default-features = false, features = ["glow", "wayland", "x11", "default_fonts", "persistence"] }
+
+[features]
+gui = ["dep:eframe"]
+
+[[bin]]
+name = "k617rgb-gui"
+required-features = ["gui"]
+
+[profile.release]
+strip = true
