@@ -49,8 +49,8 @@ O `TAG+="uaccess"` libera o teclado só para o usuário logado na sessão, não 
 k617rgb-gui
 ```
 
-- **Efeitos**: escolha um dos 20 efeitos, a cor (ou "Aleatória"), a velocidade e o brilho.
-- **Por tecla**: clique ou arraste sobre o teclado para pintar. Shift+clique copia a cor de uma tecla.
+- **Efeitos**: escolha um dos 20 efeitos na lista à esquerda e ajuste brilho, velocidade e cor (ou "Cores aleatórias") na barra de baixo.
+- **Personalizado (por tecla)**: último item da lista. Clique ou arraste sobre o teclado para pintar. Shift+clique copia a cor de uma tecla.
   São 5 grupos de cores, todos salvos no próprio teclado.
 - O indicador no topo mostra se o teclado está conectado. Sem ele, o **Aplicar** fica desativado.
 - Nada é enviado até clicar em **Aplicar**.

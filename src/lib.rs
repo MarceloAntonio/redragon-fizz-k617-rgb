@@ -66,6 +66,15 @@ fn header(cmd: [u8; 7]) -> Vec<u8> {
     p
 }
 
+/// "RRGGBB" ou "#RRGGBB" → cor.
+pub fn parse_rgb(s: &str) -> Result<Rgb, String> {
+    let v = u32::from_str_radix(s.trim_start_matches('#'), 16).map_err(|_| format!("cor inválida: {s}"))?;
+    if s.trim_start_matches('#').len() != 6 {
+        return Err(format!("cor inválida: {s} (use RRGGBB)"));
+    }
+    Ok([(v >> 16) as u8, (v >> 8) as u8, v as u8])
+}
+
 pub fn write_cfg_packet(cfg: &Cfg) -> Vec<u8> {
     let mut p = header([0x03, 0xB6, 0, 0, 0, 0, 0]);
     p[HDR..HDR + CFG_LEN].copy_from_slice(cfg);
@@ -207,6 +216,8 @@ mod tests {
 
     #[test]
     fn packet_layout() {
+        assert_eq!(parse_rgb("#FF8800"), Ok([0xff, 0x88, 0x00]));
+        assert!(parse_rgb("FF88").is_err() && parse_rgb("GG8800").is_err());
         assert_eq!(hidioc(0x06, 7), 0xC007_4806); // HIDIOCSFEATURE(7)
 
         let mut cfg = [0u8; CFG_LEN];

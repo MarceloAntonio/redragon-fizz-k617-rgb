@@ -5,8 +5,8 @@
 
 ## O que faz
 
-- **Efeitos**: escolhe um dos 20 efeitos do teclado, a cor (ou "Aleatória"), a velocidade (1-4) e o brilho (0-4).
-- **Por tecla**: pinta cada tecla com uma cor fixa. Clique ou arraste para pintar; Shift+clique copia a
+- **Efeitos**: escolhe um dos 20 efeitos na lista à esquerda; brilho (0-4), velocidade (1-4) e cor (ou "Cores aleatórias") ficam na barra de baixo, com seletor de cor e cores rápidas.
+- **Personalizado (por tecla)**: último item da lista. Pinta cada tecla com uma cor fixa. Clique ou arraste para pintar; Shift+clique copia a
   cor de uma tecla. São 5 grupos, todos salvos no próprio teclado (modo 21).
 - Nada é enviado até você clicar em **Aplicar**. Cada escrita grava na memória do teclado, então a GUI
   não manda nada a cada clique.

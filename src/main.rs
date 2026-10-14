@@ -1,14 +1,6 @@
 use k617rgb::*;
 use std::{env, process};
 
-fn parse_rgb(s: &str) -> Result<Rgb, String> {
-    let v = u32::from_str_radix(s.trim_start_matches('#'), 16).map_err(|_| format!("cor inválida: {s}"))?;
-    if s.trim_start_matches('#').len() != 6 {
-        return Err(format!("cor inválida: {s} (use RRGGBB)"));
-    }
-    Ok([(v >> 16) as u8, (v >> 8) as u8, v as u8])
-}
-
 fn flag<'a>(args: &'a [String], name: &str) -> Option<&'a str> {
     args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).map(String::as_str)
 }
