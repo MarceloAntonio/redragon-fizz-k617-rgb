@@ -3,6 +3,8 @@
 Controle open source do RGB do teclado **Redragon Fizz K617 (ABNT2)** no Linux, sem o software
 oficial do Windows. Tem interface gráfica e linha de comando.
 
+> Projeto independente e **não oficial**, sem ligação com a Redragon.
+
 O firmware do teclado não é alterado: o programa só envia os mesmos comandos HID que o software
 oficial envia. O protocolo foi obtido por engenharia reversa do `KeyboardDrv.exe` v1.6.6
 (instalador oficial) e testado no teclado.
@@ -13,13 +15,19 @@ oficial envia. O protocolo foi obtido por engenharia reversa do `KeyboardDrv.exe
 
 ## Instalação
 
-Requer Linux com hidraw e Rust (`cargo`).
+Binários prontos para x86_64 estão em [Releases](https://github.com/MarceloAntonio/redragon-fizz-k617-rgb/releases),
+com o `SHA256SUMS` para conferir (`sha256sum -c SHA256SUMS`).
+
+Para compilar, é preciso Rust (`cargo`):
 
 ```bash
 git clone https://github.com/MarceloAntonio/redragon-fizz-k617-rgb.git
 cd redragon-fizz-k617-rgb
 cargo build --release --features gui
 sudo cp target/release/k617rgb target/release/k617rgb-gui /usr/local/bin/
+# atalho no menu de aplicativos, com ícone
+install -Dm644 assets/k617rgb.desktop ~/.local/share/applications/k617rgb.desktop
+install -Dm644 assets/k617rgb.svg ~/.local/share/icons/hicolor/scalable/apps/k617rgb.svg
 ```
 
 Só o CLI, sem nenhuma dependência: `cargo build --release`.
@@ -32,6 +40,9 @@ echo 'KERNEL=="hidraw*", ATTRS{idVendor}=="258a", ATTRS{idProduct}=="0049", TAG+
 sudo udevadm control --reload && sudo udevadm trigger
 ```
 
+O `TAG+="uaccess"` libera o teclado só para o usuário logado na sessão, não para todo mundo
+(ao contrário de `MODE="0666"`). O programa não precisa de root nem de acesso à rede.
+
 ## Interface gráfica
 
 ```bash
@@ -41,6 +52,7 @@ k617rgb-gui
 - **Efeitos**: escolha um dos 20 efeitos, a cor (ou "Aleatória"), a velocidade e o brilho.
 - **Por tecla**: clique ou arraste sobre o teclado para pintar. Shift+clique copia a cor de uma tecla.
   São 5 grupos de cores, todos salvos no próprio teclado.
+- O indicador no topo mostra se o teclado está conectado. Sem ele, o **Aplicar** fica desativado.
 - Nada é enviado até clicar em **Aplicar**.
 - As cores pintadas ficam salvas em `~/.local/share/k617rgb/`.
 
@@ -113,3 +125,8 @@ Nomes de teclas aceitos no `keys`, com as legendas ABNT2:
 - `src/lib.rs`: protocolo e acesso ao hidraw (usado pelo CLI e pela GUI)
 - `src/main.rs`: CLI
 - `src/bin/k617rgb-gui.rs`: interface gráfica (eframe/egui)
+- `assets/`: ícone e atalho `.desktop`
+
+## Licença
+
+[MIT](LICENSE).

@@ -178,12 +178,15 @@ pub fn open_device() -> io::Result<File> {
         let desc = fs::read(dir.join("device/report_descriptor")).unwrap_or_default();
         if desc.windows(2).any(|w| w == [0x85, 0x06]) {
             let dev = format!("/dev/{}", dir.file_name().unwrap().to_string_lossy());
-            return OpenOptions::new().read(true).write(true).open(&dev).map_err(|e| {
-                io::Error::new(e.kind(), format!("{dev}: {e} (veja a regra udev no README)"))
+            return OpenOptions::new().read(true).write(true).open(&dev).map_err(|e| match e.kind() {
+                io::ErrorKind::PermissionDenied => {
+                    io::Error::new(e.kind(), format!("Sem permissão para {dev}. Configure a regra udev (veja o README)."))
+                }
+                _ => io::Error::new(e.kind(), format!("{dev}: {e}")),
             });
         }
     }
-    Err(io::Error::new(io::ErrorKind::NotFound, "K617 (258a:0049) não encontrado"))
+    Err(io::Error::new(io::ErrorKind::NotFound, "Teclado K617 (258a:0049) não encontrado. Confira o cabo USB."))
 }
 
 pub fn read_cfg(f: &File) -> io::Result<Cfg> {

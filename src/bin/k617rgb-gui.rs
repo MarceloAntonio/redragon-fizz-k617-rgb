@@ -8,6 +8,9 @@ use std::thread;
 const BG: Color32 = Color32::from_rgb(0x16, 0x16, 0x1a);
 const PANEL: Color32 = Color32::from_rgb(0x1e, 0x1e, 0x24);
 const KEY_OFF: Color32 = Color32::from_rgb(0x2a, 0x2a, 0x32);
+const ACCENT: Color32 = Color32::from_rgb(0x2f, 0x6f, 0xeb);
+const OK: Color32 = Color32::from_rgb(0x4c, 0xd1, 0x7a);
+const ERR: Color32 = Color32::from_rgb(0xff, 0x6b, 0x6b);
 
 enum Job {
     Mode { mode: u8, color: Color, speed: u8, bright: u8 },
@@ -22,7 +25,7 @@ fn worker(ctx: egui::Context) -> (Sender<Job>, Receiver<Result<String, String>>)
         for job in job_rx {
             let r = (|| {
                 let f = open_device().map_err(|e| e.to_string())?;
-                let mut cfg = read_cfg(&f).map_err(|e| format!("lendo config: {e}"))?;
+                let mut cfg = read_cfg(&f).map_err(|e| format!("o teclado não respondeu: {e}"))?;
                 let (packets, msg) = match job {
                     Job::Mode { mode, color, speed, bright } => (
                         mode_packets(&mut cfg, mode, color, Some(speed), Some(bright)),
@@ -33,7 +36,7 @@ fn worker(ctx: egui::Context) -> (Sender<Job>, Receiver<Result<String, String>>)
                     }
                 };
                 for p in packets {
-                    set_feature(&f, &p).map_err(|e| format!("enviando: {e}"))?;
+                    set_feature(&f, &p).map_err(|e| format!("falha ao enviar (teclado desconectado?): {e}"))?;
                 }
                 Ok(msg)
             })();
@@ -57,6 +60,8 @@ struct App {
     rx: Receiver<Result<String, String>>,
     status: Result<String, String>,
     busy: bool,
+    conn: Result<(), String>,
+    checked_at: f64,
 }
 
 /// Estado salvo como texto: "custom mode r g b random speed bright group" + uma linha hex por grupo.
@@ -130,8 +135,10 @@ impl App {
             groups: vec![vec![[0, 170, 255]; KEYS.len()]; GROUPS],
             tx,
             rx,
-            status: Ok("Pronto. Nada é enviado até clicar em Aplicar.".into()),
+            status: Ok("Nada é enviado até clicar em Aplicar.".into()),
             busy: false,
+            conn: Ok(()),
+            checked_at: f64::NEG_INFINITY,
         };
         if let Some(s) = cc.storage.and_then(|s| s.get_string("state")) {
             load(&s, &mut app);
@@ -161,6 +168,12 @@ impl App {
     fn controls(&mut self, ui: &mut egui::Ui) {
         ui.add_space(8.0);
         ui.heading("K617 RGB");
+        let (color, text) = if self.conn.is_ok() { (OK, "Teclado conectado") } else { (ERR, "Teclado não encontrado") };
+        ui.horizontal(|ui| {
+            let (dot, _) = ui.allocate_exact_size(Vec2::splat(10.0), Sense::hover());
+            ui.painter().circle_filled(dot.center(), 4.0, color);
+            ui.colored_label(color, text);
+        });
         ui.add_space(4.0);
 
         ui.horizontal(|ui| {
@@ -191,7 +204,9 @@ impl App {
             ui.label("Efeito");
             egui::Grid::new("modes").num_columns(2).spacing([4.0, 4.0]).show(ui, |ui| {
                 for (i, name) in MODES.iter().enumerate() {
-                    ui.selectable_value(&mut self.mode, i as u8 + 1, *name);
+                    let mut name = name.to_string();
+                    name[..1].make_ascii_uppercase();
+                    ui.selectable_value(&mut self.mode, i as u8 + 1, name);
                     if i % 2 == 1 {
                         ui.end_row();
                     }
@@ -210,14 +225,16 @@ impl App {
 
     fn apply_bar(&mut self, ui: &mut egui::Ui) {
         let apply = egui::Button::new(egui::RichText::new("Aplicar").strong().size(16.0))
-            .fill(c32(self.color).gamma_multiply(0.55))
+            .fill(ACCENT)
             .min_size(Vec2::new(ui.available_width(), 36.0));
-        if ui.add_enabled(!self.busy, apply).clicked() {
+        if ui.add_enabled(!self.busy && self.conn.is_ok(), apply).clicked() {
             self.apply();
         }
-        match &self.status {
-            Ok(m) => ui.label(m),
-            Err(e) => ui.colored_label(Color32::from_rgb(0xff, 0x6b, 0x6b), e),
+        match (&self.conn, &self.status) {
+            (Err(e), _) => ui.colored_label(ERR, e),
+            (_, Err(e)) => ui.colored_label(ERR, e),
+            (_, Ok(m)) if m.ends_with("aplicado") => ui.colored_label(OK, format!("✔ {m}")),
+            (_, Ok(m)) => ui.label(m),
         };
     }
 
@@ -277,7 +294,15 @@ impl eframe::App for App {
         if let Ok(r) = self.rx.try_recv() {
             self.status = r;
             self.busy = false;
+            self.checked_at = f64::NEG_INFINITY; // reconfere a conexão depois de cada envio
         }
+        // Detecta conectar/desconectar: abrir o hidraw é só uma leitura do sysfs.
+        let now = ui.input(|i| i.time);
+        if !self.busy && now - self.checked_at > 2.0 {
+            self.conn = open_device().map(drop).map_err(|e| e.to_string());
+            self.checked_at = now;
+        }
+        ui.ctx().request_repaint_after(std::time::Duration::from_secs(2));
         egui::Panel::left("side")
             .exact_size(260.0)
             .frame(egui::Frame::new().fill(PANEL).inner_margin(16.0))
@@ -297,7 +322,7 @@ fn main() -> eframe::Result {
         viewport: egui::ViewportBuilder::default()
             .with_title("K617 RGB")
             .with_app_id("k617rgb")
-            .with_inner_size([1180.0, 560.0])
+            .with_inner_size([1180.0, 760.0])
             .with_min_inner_size([820.0, 440.0]),
         ..Default::default()
     };

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=K617 RGB
+Comment=Controle do RGB do teclado Redragon K617 (não oficial)
+Exec=k617rgb-gui
+Icon=k617rgb
+Categories=Settings;HardwareSettings;
+StartupWMClass=k617rgb

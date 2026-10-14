@@ -29,7 +29,7 @@ O CLI (`cargo build --release`, sem a feature) continua sem nenhuma dependência
 
 | Opção | Avaliação |
 |---|---|
-| **eframe/egui** (escolhida) | Mesma linguagem do projeto: a GUI chama direto as funções de `src/lib.rs` (`mode_packets`, `custom_packets`, `read_cfg`). Binário único (~11 MB, sem runtime), abre na hora e desenha na GPU (OpenGL). Funciona nativo em Wayland/Hyprland e X11. O teclado é desenhado com retângulos a partir das coordenadas do próprio INI do fabricante. O color picker já vem pronto. |
+| **eframe/egui** (escolhida) | Mesma linguagem do projeto: a GUI chama direto as funções de `src/lib.rs` (`mode_packets`, `custom_packets`, `read_cfg`). Binário único (~11 MB, sem runtime), abre na hora e desenha na GPU (OpenGL). Funciona nativo em Wayland/Hyprland e X11. O teclado é desenhado com retângulos a partir das coordenadas do INI do instalador oficial (já embutidas em `src/lib.rs`). O color picker já vem pronto. |
 | iced | Também é Rust e bonito, mas a arquitetura Elm (Message/update/view) dá mais código para uma tela só. |
 | GTK4 + libadwaita | Visual GNOME ótimo, mas fora do GNOME (Hyprland, KDE) o tema não integra bem. Traz uma dependência de sistema pesada, e um canvas de teclado clicável dá mais trabalho. |
 | Slint | Bom e leve, mas adiciona uma DSL própria (`.slint`) e um build script. Ganho pequeno aqui. |
